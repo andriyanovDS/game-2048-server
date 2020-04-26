@@ -1,9 +1,5 @@
 import { Request, Response } from 'express-serve-static-core'
-import { Repository } from '../database'
-
-export type CreateRoomParams = {
-  deviceId: string
-}
+import { CreateRoomParams, Repository } from '../database'
 
 export type CreateRoomSuccessResponse = {
   roomId: string
@@ -20,14 +16,14 @@ export async function createRoomController(
   response: Response<CreateRoomResponse>,
   repository: Repository
 ): Promise<void> {
-  const { deviceId } = request.body
-  if (!deviceId) {
+  const { deviceId, boardSize, hostName } = request.body
+  if (!deviceId || !boardSize || !hostName) {
     response.statusCode = 500
-    response.send({ errorMessage: "uuid missed in request body!" })
+    response.send({ errorMessage: 'Invalid params' })
     return
   }
   try {
-    const roomId = await repository.createRoom(deviceId)
+    const roomId = await repository.createRoom(request.body)
     response.statusCode = 200
     response.send({ roomId })
   } catch (e) {

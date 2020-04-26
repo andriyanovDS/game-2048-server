@@ -2,7 +2,7 @@ import WebSocket from 'ws'
 import { Socket } from 'net'
 import { IncomingMessage } from 'http'
 
-import { RepositoryMongodb } from '../database'
+import { Repository, RepositoryMongodb } from '../database'
 
 export interface WebSocketClient {
   ws: WebSocket
@@ -14,7 +14,7 @@ export interface WebSocketServerInterface {
 }
 
 export abstract class WebSocketServer<T extends {} = {}> implements WebSocketServerInterface {
-  protected readonly db: RepositoryMongodb
+  protected readonly db: Repository
   private readonly server: WebSocket.Server
   private readonly clients: Array<WebSocketClient> = []
 

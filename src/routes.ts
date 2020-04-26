@@ -1,11 +1,10 @@
 import { Express, ParamsDictionary } from 'express-serve-static-core'
 
-import { Repository } from './database'
+import { CreateRoomParams, Repository } from './database'
 import {
   createDeviceIdController,
   CreateDeviceIdResponse,
   createRoomController,
-  CreateRoomParams,
   CreateRoomResponse
 } from './controllers'
 

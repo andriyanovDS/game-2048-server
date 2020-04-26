@@ -6,10 +6,18 @@ import environment from '../environment'
 export { Room, RoomModel } from './models'
 import { Room, RoomModel } from './models'
 
+export type CreateRoomParams = {
+  hostName: string
+  deviceId: string
+  boardSize: number
+}
+
 export interface Repository {
   db: Connection
-  createRoom(deviceId: string): Promise<string>
+  createRoom(params: CreateRoomParams): Promise<string>
   deleteRoom(roomId: string): Promise<void>
+  getAllAvailableRooms(): Promise<ReadonlyArray<Room>>
+  subscribeRoomList(): Observable<CollectionChangeEvent<Room>>
 }
 
 export type CollectionChangeEventUpdate<T extends {}> = {
@@ -55,14 +63,14 @@ export class RepositoryMongodb implements Repository {
       .on('error', console.error)
   }
 
-  readonly createRoom = (deviceId: string): Promise<string> => {
+  readonly createRoom = (params: CreateRoomParams): Promise<string> => {
     return new Promise<string>((resolve, reject) => {
-      RoomModel.create({ hostId: deviceId }, (error, room) => {
+      const { deviceId, ...data } = params
+      RoomModel.create({ ...data, hostId: deviceId }, (error, room) => {
         if (error) {
           reject(error)
           return
         }
-        console.log('Did create room', room._id)
         resolve(room._id)
       })
     })
@@ -80,6 +88,23 @@ export class RepositoryMongodb implements Repository {
     })
   }
 
+  readonly getAllAvailableRooms = (): Promise<ReadonlyArray<Room>> => {
+    return new Promise<ReadonlyArray<Room>>((resolve, reject) => {
+      RoomModel.find((error, documents: ReadonlyArray<any>) => {
+        if (error) {
+          reject(error)
+          return
+        }
+        resolve(documents.map((v) => ({
+          id: v._id,
+          hostName: v.hostName,
+          boardSize: v.boardSize,
+          hostId: v.hostId
+        })))
+      })
+    })
+  }
+
   readonly subscribeRoomList = (): Observable<CollectionChangeEvent<Room>> => {
     return new Observable<CollectionChangeEvent<Room>>((o) => {
       const roomListCollection = this.db.collection('rooms')
@@ -87,13 +112,11 @@ export class RepositoryMongodb implements Repository {
 
       changeStream.on('change', (event) => {
         if (isChangeEventInsert(event) || isChangeEventUpdate(event)) {
+          const { _id: id, ...doc } = event.fullDocument
           o.next({
             documentId: event.documentKey._id.toHexString(),
             type: event.operationType,
-            data: {
-              id: event.fullDocument._id,
-              hostId: event.fullDocument.hostId
-            }
+            data: { id, ...doc }
           })
           return
         }
