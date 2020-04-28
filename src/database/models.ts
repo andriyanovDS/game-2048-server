@@ -1,6 +1,6 @@
 import { Schema, model, Document } from 'mongoose'
 
-export enum UserAction {
+export enum UserActionDirection {
   right = 'right',
   left = 'left',
   up = 'up',
@@ -8,13 +8,17 @@ export enum UserAction {
 }
 
 export type CellPosition = {
-  index: number
-  row: number
+  indexes: [number, number]
 }
 
-export type InitialCell = {
+export type SharedCell = {
   position: CellPosition
   value: number
+}
+
+export type OpponentAction = {
+  direction: UserActionDirection
+  generatedCell?: SharedCell
 }
 
 export interface Room {
@@ -23,20 +27,26 @@ export interface Room {
   hostName: string
   guestId?: string
   boardSize: number
-  initialCells: ReadonlyArray<InitialCell>
-  actionsHistory: ReadonlyArray<UserAction>
+  initialCells: ReadonlyArray<SharedCell>
+  actionsHistory: ReadonlyArray<OpponentAction>
 }
 
 export type RoomModel = Document & Room
 
 const positionSchema = new Schema({
-  index: { type:  Schema.Types.Number },
-  row: { type:  Schema.Types.Number }
+  indexes: [{
+    type: Schema.Types.Number
+  }]
 })
 
-const initialCell = new Schema({
+const cellSchema = new Schema({
   position: positionSchema,
   value: { type:  Schema.Types.Number }
+})
+
+const opponentActionSchema = new Schema({
+  direction: { type: Schema.Types.String },
+  generatedCell: cellSchema
 })
 
 const roomSchema = new Schema({
@@ -44,11 +54,9 @@ const roomSchema = new Schema({
   hostId: { type: Schema.Types.String },
   hostName: { type: Schema.Types.String },
   boardSize: { type: Schema.Types.Number },
-  guestId: { type: Schema.Types.String, required: false },
-  initialCells: [initialCell],
-  actionsHistory: [{
-    type: Schema.Types.String
-  }]
+  guestId: { type: Schema.Types.String },
+  initialCells: [cellSchema],
+  actionsHistory: [opponentActionSchema]
 })
 
 export const RoomModel = model<RoomModel>('Room', roomSchema)

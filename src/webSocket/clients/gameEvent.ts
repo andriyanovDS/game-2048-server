@@ -1,4 +1,4 @@
-import { InitialCell, UserAction } from '../../database/models'
+import { SharedCell, UserActionDirection } from '../../database/models'
 
 export type GameEventType =
   'hostDidDisconnect'
@@ -12,12 +12,13 @@ export interface GameEvent {
 
 export interface GameEventInitialCells extends GameEvent {
   type: 'initialCells'
-  initialCells: ReadonlyArray<InitialCell>
+  initialCells: ReadonlyArray<SharedCell>
 }
 
 export interface GameEventOpponentAction {
   type: 'opponentAction'
-  action: UserAction
+  direction: UserActionDirection
+  generatedCell: SharedCell
 }
 
 export type ExternalGameEvent = GameEventOpponentAction | GameEventInitialCells

@@ -75,7 +75,7 @@ export class RoomClient implements WebSocketResponder {
       if (this.isHostUser && actionsCount % 2 !== 0) { return }
       if (!this.isHostUser && actionsCount % 2 === 0) { return }
       this.updateRoom({
-        actionsHistory: this.room.actionsHistory.concat([message.action])
+        actionsHistory: this.room.actionsHistory.concat([message])
       }).catch(console.error)
     }
   }
@@ -112,6 +112,11 @@ export class RoomClient implements WebSocketResponder {
       this.sendMessage({
         users: [room.hostId, room.guestId]
       })
+      return
+    }
+    if (this.isHostUser && !!this.room.guestId && !room.guestId) {
+      this.sendMessage({ users: [room.hostId] })
+      return
     }
   }
 

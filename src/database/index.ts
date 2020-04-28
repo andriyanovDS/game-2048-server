@@ -56,6 +56,7 @@ function modelToRoom(v: RoomModel): Room {
     hostName: v.hostName,
     boardSize: v.boardSize,
     hostId: v.hostId,
+    guestId: v.guestId,
     initialCells: v.initialCells,
     actionsHistory: v.actionsHistory
   }
